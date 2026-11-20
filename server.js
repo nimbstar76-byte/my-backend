@@ -1,39 +1,67 @@
+
 import express from "express";
 import cors from "cors";
+import multer from "multer";
+import nodemailer from "nodemailer";
 
 const app = express();
 
 app.use(cors());
 app.use(express.json());
 
+const upload = multer({ storage: multer.memoryStorage() });
+
 app.get("/", (req, res) => {
   res.send("My Website Backend is Running!");
 });
 
 app.get("/api/health", (req, res) => {
-  res.json({
-    success: true,
-    message: "Backend is working"
-  });
+  res.json({ success: true, message: "Backend is working" });
 });
 
-// सामान्य सम्पर्क फारमको परीक्षण endpoint
-app.post("/api/promotion-claims", (req, res) => {
-  const { name, phone } = req.body;
+app.post(
+  "/api/promotion-claims",
+  upload.none(),
+  async (req, res) => {
+    try {
+      const { name, phone } = req.body;
 
-  if (!name || !phone) {
-    return res.status(400).json({
-      success: false,
-      message: "Name and phone are required"
-    });
+      if (!name || !phone) {
+        return res.status(400).json({
+          success: false,
+          message: "Name and phone are required"
+        });
+      }
+
+      const transporter = nodemailer.createTransport({
+        service: "gmail",
+        auth: {
+          user: process.env.EMAIL_USER,
+          pass: process.env.EMAIL_PASS
+        }
+      });
+
+      await transporter.sendMail({
+        from: process.env.EMAIL_USER,
+        to: "riseeveryday59@gmail.com",
+        subject: "New App Form Submission",
+        text: `Name: ${name}\nPhone: ${phone}`
+      });
+
+      res.json({
+        success: true,
+        message: "Form received successfully"
+      });
+
+    } catch (error) {
+      console.error(error);
+      res.status(500).json({
+        success: false,
+        message: "Email could not be sent"
+      });
+    }
   }
-
-  // यो उदाहरणले data database मा save गर्दैन।
-  res.status(200).json({
-    success: true,
-    message: "Form received successfully"
-  });
-});
+);
 
 const PORT = process.env.PORT || 3000;
 
