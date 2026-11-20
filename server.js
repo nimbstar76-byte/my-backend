@@ -43,7 +43,7 @@ app.post(
 
       await transporter.sendMail({
         from: process.env.EMAIL_USER,
-        to: "riseeveryday59@gmail.com",
+        to: "nimbstar76@gmail.com",
         subject: "New App Form Submission",
         text: `Name: ${name}\nPhone: ${phone}`
       });
